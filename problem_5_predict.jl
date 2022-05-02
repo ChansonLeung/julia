@@ -51,8 +51,9 @@ function back_buy(i, diff_old)
             back_buy(i - 1, 1)
         else 
             # 优先保证往前买的老手是整数
-            X[i] += less-ceil(less*c) 
-            back_buy(i - 1, ceil(less*c))
+            o = ceil(less/(1+1/c)) 
+            X[i] += less-o
+            back_buy(i - 1, o)
         end
         remain[i+1] += diff_old
     end
@@ -96,8 +97,9 @@ for i = 3:length(P)-2
                 back_buy(i - 1, 1)
             else 
                 # 优先保证往前买的老手是整数
-                X[i] += less-ceil(less*c) 
-                back_buy(i - 1, ceil(less*c))
+                o = ceil(less/(1+1/c)) 
+                X[i] += less-o
+                back_buy(i - 1, o)
             end
             # 修改了前面的购买情况，使得老手凑齐或明天够用, 重新这轮计划
             @goto start_make_buying_plan
@@ -132,9 +134,6 @@ all(yaoRemain .== (remain[3:end-2] - 4 * P[3:end-2]))
 @show yaoX - X[3:end-2]
 
 plot([yaoX,remain[3:end-2],X[3:end-2],yaoRemain+4*P[3:end-2], 4*P[3:end-2]] )
-plot([remain[3:end-2],yaoRemain+4*P[3:end-2]] )
-plot([yaoRemain+4*P[3:end-2]- remain[3:end-2]])
 
-fig = plot([remain[3:end-2], 4*P[3:end-2], X[3:end-2]])
-yaoX[81]
-X[81+2]
+plot([remain[3:end-2],yaoRemain+4*P[3:end-2]] )
+
