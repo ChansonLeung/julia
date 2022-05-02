@@ -1,19 +1,23 @@
+using Revise
 using XLSX
 using OffsetArrays
 using CSV
 using Plots
+import Base
 plotlyjs()
 
-#状态变量 P remain X
+#状态变量 
+##P 需求量 
 P = begin
     col, label = XLSX.readtable("need.xlsx", "Sheet1")
     data = reshape(hcat(col...), :)
     data = [0; 0; data; 0; 0]
 end
-#
+## 当天能用(不含当天要工作)
 remain = begin
     tmp = [50; 50; 50; zeros(length(P) - 3)]
 end
+## 购买量
 X = zeros(size(P))
 
 #参数
@@ -25,6 +29,8 @@ c = 1 / 10
 # 中间变量
 ## 当天在保养的
 in_rest = zeros(size(P))
+## 当天训练
+train = zeros(size(P))
 
 function back_buy(i, diff_old)
     # 今天得多买diff_old个充当后面的老手
@@ -58,15 +64,14 @@ for i = 3:length(P)-2
     # 明天能用 = 今天能用 - 今天用  + 昨天用 - 昨天坏 
     remain_p1 = remain[i] - 4 * P[i] + 4 * P[i-1] - ceil(τ * 4 * P[i-1])
     # 今天保养(后面要买的话再减) = 今天能用 - 今天用 + 昨天用 - 昨天坏
-    in_rest[i] = remain[i] - P[i] + P[i-1] - ceil(τ*P[i-1])
-
+    in_rest[i] = remain[i] - P[i] + P[i-1] - round(τ*P[i-1])
     # 不买明天也够
     if remain_p1 >= 4 * P[i+1]
-        #今天不买
+        #则不买
         X[i] = 0
         remain[i+1] = remain_p1
     else
-        # 不买明天不够,今天得买刚好够明天的量diff
+        # 不够,今天得买刚好够明天的量diff
         diff = 4 * P[i+1] - remain_p1
         # 1. 老手够用->培训量(今天能用-今天用)/师生比  足够培训今天想买的新手
         if floor((remain[i] - 4 * P[i]) / c) >= diff
@@ -82,13 +87,17 @@ for i = 3:length(P)-2
             # 修改了前面的购买情况，使得老手凑齐或明天够用, 重新这轮计划
             @goto start_make_buying_plan
         end
-
-        # 减去用来培训的
-        in_rest[i] -= ceil(X[i]*τ)
     end
+    # 减去用来培训的
+    in_rest[i] -= ceil(X[i]*c)
+    # 当天训练
+    train[i] = X[i] + X[i]*c
 end
 
-cost = 200*sum(X[2:end-2]) + 10*sum(in_rest[2:end-2])
+cost = 100*sum(X[2:end-2]) + 5*sum(in_rest[2:end-2])
+
+sum(X)
+sum(P*0.1*4)
 
 # 验证
 using MATLAB
@@ -101,3 +110,5 @@ yaoRest = yao
 all(yaoX .== X[3:end-2])
 all(yaoRemain .== (remain[3:end-2] - 4 * P[3:end-2]))
 
+
+fig = plot([remain[3:end-2], 4*P[3:end-2], X[3:end-2]])
