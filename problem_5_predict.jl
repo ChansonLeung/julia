@@ -26,13 +26,11 @@ X = zeros(size(P))
 ##师生比
 c = 1 / 10
 ##损耗率
-τ = 0.1
+τ = 0.2
 
 # 中间变量
 ## 当天在保养的
 in_rest = zeros(size(P))
-## 当天训练
-train = zeros(size(P))
 
 function back_buy(i, diff_old)
     # 今天得多买diff_old个充当后面的老手
@@ -60,8 +58,6 @@ function back_buy(i, diff_old)
     end
     # 今天保养(后面要买的话再减) = 今天能用 - 今天用 + 昨天用 - 昨天坏
     in_rest[i] = remain[i] - P[i] + P[i-1] - roundup(τ*P[i-1]) - ceil(X[i]*c)
-    # 当天训练量
-    train[i] = X[i] + ceil(X[i]*c)
     print("hi")
 end
 
@@ -109,11 +105,14 @@ for i = 3:length(P)-2
     end
     # 减去用来培训的
     in_rest[i] -= ceil(X[i]*c)
-    # 当天训练量
-    train[i] = X[i] + ceil(X[i]*c)
 end
 
-cost = 100*sum(X[2:end-2]) + 5*sum(in_rest[2:end-2]) + 10*sum(X[2:end-2]+ ceil.(c*X[2:end-2]) )
+cost = 100*sum(X[2:end-2]) + 5*sum(in_rest[2:end-2]) + 10*sum(X[2:end-2] + ceil.(c*X[2:end-2]) )
+
+
+sum(X)
+sum(in_rest)
+
 plot(X)
 
 sum(X)
@@ -130,5 +129,12 @@ yaoRest = yao
 all(yaoX .== X[3:end-2])
 all(yaoRemain .== (remain[3:end-2] - 4 * P[3:end-2]))
 
+@show yaoX - X[3:end-2]
+
+plot([yaoX,remain[3:end-2],X[3:end-2],yaoRemain+4*P[3:end-2], 4*P[3:end-2]] )
+plot([remain[3:end-2],yaoRemain+4*P[3:end-2]] )
+plot([yaoRemain+4*P[3:end-2]- remain[3:end-2]])
 
 fig = plot([remain[3:end-2], 4*P[3:end-2], X[3:end-2]])
+yaoX[81]
+X[81+2]
