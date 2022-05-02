@@ -15,7 +15,7 @@ for i = 1:8
         tmp_Xi > 0 ? tmp_Xi : 0.0
     end
     Xm[i] = sum(X[0:i-1])
-    Xb[i] = Xm[i] - P[i] - X[i]
+    Xb[i] = Xm[i] - P[i]
 end
 
 Cost_ship = 200 * sum(X[1:8]) + 10 * sum(Xb[1:8])
